@@ -1,0 +1,654 @@
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n")
+================================================================================ 
+
+> cat("CORRECTED MISSINGNESS ANALYSIS - TRUE 60-DAY ENROLLMENT\n")
+CORRECTED MISSINGNESS ANALYSIS - TRUE 60-DAY ENROLLMENT
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n\n")
+================================================================================ 
+
+
+> cat("Analysis Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
+Analysis Date: 2026-01-28 15:42:05 
+
+
+> # ============================================================================
+> # 1. LOAD DATA AND CREATE COMPLETE 60-DAY SEQUENCES
+> # =========== .... [TRUNCATED] 
+================================================================================ 
+
+> cat("DATA PREPARATION\n")
+DATA PREPARATION
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n\n")
+================================================================================ 
+
+
+> # Load actual data
+> data <- read_csv("ndvi_stress_data.csv") %>%
++   mutate(Date = as.Date(Date))
+
+> cat("Actual data loaded:", nrow(data), "observations\n")
+Actual data loaded: 8347 observations
+
+> # Load start dates
+> start_dates <- read_csv("start_dates.csv") %>%
++   mutate(start_date = as.Date(start_date))
+
+> cat("Start dates loaded:", nrow(start_dates), "participants\n\n")
+Start dates loaded: 178 participants
+
+
+> # Create race variable
+> data <- data %>%
++   mutate(
++     race_white = case_when(
++       str_detect(race, "White|European") ~ "White",
++       !i .... [TRUNCATED] 
+
+> # Create COMPLETE 60-day sequence for ALL participants
+> complete_data <- start_dates %>%
++   rowwise() %>%
++   mutate(
++     end_date = start_date  .... [TRUNCATED] 
+
+> cat("COMPLETE DATA STRUCTURE CREATED:\n")
+COMPLETE DATA STRUCTURE CREATED:
+
+> cat("Total possible observations (178 × 60):", nrow(complete_data), "\n")
+Total possible observations (178 × 60): 10680 
+
+> cat("Participants:", n_distinct(complete_data$Participant_ID), "\n")
+Participants: 178 
+
+> cat("Study days per participant: 60 (for all)\n\n")
+Study days per participant: 60 (for all)
+
+
+> # Join with actual observations
+> complete_data <- complete_data %>%
++   left_join(data, by = c("Participant_ID", "Date"))
+
+> # Create missingness indicators
+> complete_data <- complete_data %>%
++   mutate(
++     stress_missing = is.na(stressed),
++     ndvi_missing = is.na( .... [TRUNCATED] 
+
+> # ============================================================================
+> # 2. TRUE ADHERENCE RATES
+> # ===================================== .... [TRUNCATED] 
+================================================================================ 
+
+> cat("TRUE ADHERENCE RATES (BASED ON 60-DAY PROTOCOL)\n")
+TRUE ADHERENCE RATES (BASED ON 60-DAY PROTOCOL)
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n\n")
+================================================================================ 
+
+
+> # Overall patterns
+> pattern_summary <- complete_data %>%
++   summarise(
++     total_possible = n(),
++     n_both_present = sum(both_present),
++     .... [TRUNCATED] 
+
+> cat("OVERALL OBSERVATION PATTERNS:\n")
+OVERALL OBSERVATION PATTERNS:
+
+> cat("------------------------------\n")
+------------------------------
+
+> cat(sprintf("Total possible observations (178 × 60): %d\n", pattern_summary$total_possible))
+Total possible observations (178 × 60): 10680
+
+> cat(sprintf("  Both stress & NDVI present: %d (%.1f%%)\n",
++             pattern_summary$n_both_present, pattern_summary$pct_both_present))
+  Both stress & NDVI present: 4614 (43.2%)
+
+> cat(sprintf("  Only stress present:        %d (%.1f%%)\n",
++             pattern_summary$n_only_stress, pattern_summary$pct_only_stress))
+  Only stress present:        14 (0.1%)
+
+> cat(sprintf("  Only NDVI present:          %d (%.1f%%)\n",
++             pattern_summary$n_only_ndvi, pattern_summary$pct_only_ndvi))
+  Only NDVI present:          3719 (34.8%)
+
+> cat(sprintf("  Neither present (missing):  %d (%.1f%%)\n",
++             pattern_summary$n_both_missing, pattern_summary$pct_both_missing))
+  Neither present (missing):  2333 (21.8%)
+
+> cat(sprintf("\nObservations with ≥1 variable: %d (%.1f%%)\n\n",
++             pattern_summary$n_at_least_one, pattern_summary$pct_at_least_one))
+
+Observations with ≥1 variable: 8347 (78.2%)
+
+
+> # Separate adherence by measure
+> adherence_by_measure <- complete_data %>%
++   summarise(
++     stress_available = sum(!stress_missing),
++     ndvi .... [TRUNCATED] 
+
+> cat("ADHERENCE BY MEASURE:\n")
+ADHERENCE BY MEASURE:
+
+> cat("---------------------\n")
+---------------------
+
+> cat(sprintf("Stress (EMA): %d observations (%.1f%% of 10,680 possible days)\n",
++             adherence_by_measure$stress_available,
++             a .... [TRUNCATED] 
+Stress (EMA): 4628 observations (43.3% of 10,680 possible days)
+
+> cat(sprintf("NDVI (GPS):   %d observations (%.1f%% of 10,680 possible days)\n\n",
++             adherence_by_measure$ndvi_available,
++             a .... [TRUNCATED] 
+NDVI (GPS):   8333 observations (78.0% of 10,680 possible days)
+
+
+> # Per-participant adherence
+> participant_adherence <- complete_data %>%
++   group_by(Participant_ID) %>%
++   summarise(
++     Group = first(na.omit .... [TRUNCATED] 
+
+> cat("PER-PARTICIPANT ADHERENCE SUMMARY:\n")
+PER-PARTICIPANT ADHERENCE SUMMARY:
+
+> cat("----------------------------------\n")
+----------------------------------
+
+> cat(sprintf("Number of participants: %d\n", nrow(participant_adherence)))
+Number of participants: 178
+
+> cat(sprintf("Days per participant: %d (all participants)\n\n", unique(participant_adherence$total_days)))
+Days per participant: 60 (all participants)
+
+
+> cat("Stress (EMA) Adherence:\n")
+Stress (EMA) Adherence:
+
+> cat(sprintf("  Mean: %.1f%% (SD = %.1f%%)\n",
++             mean(participant_adherence$stress_adherence),
++             sd(participant_adherence$str .... [TRUNCATED] 
+  Mean: 43.3% (SD = 27.6%)
+
+> cat(sprintf("  Median: %.1f%% (IQR: %.1f%% - %.1f%%)\n",
++             median(participant_adherence$stress_adherence),
++             quantile(partic .... [TRUNCATED] 
+  Median: 40.0% (IQR: 16.7% - 68.3%)
+
+> cat(sprintf("  Range: %.1f%% - %.1f%%\n\n",
++             min(participant_adherence$stress_adherence),
++             max(participant_adherence$stres .... [TRUNCATED] 
+  Range: 1.7% - 95.0%
+
+
+> cat("NDVI (GPS) Adherence:\n")
+NDVI (GPS) Adherence:
+
+> cat(sprintf("  Mean: %.1f%% (SD = %.1f%%)\n",
++             mean(participant_adherence$ndvi_adherence),
++             sd(participant_adherence$ndvi_ .... [TRUNCATED] 
+  Mean: 78.0% (SD = 27.3%)
+
+> cat(sprintf("  Median: %.1f%% (IQR: %.1f%% - %.1f%%)\n",
++             median(participant_adherence$ndvi_adherence),
++             quantile(particip .... [TRUNCATED] 
+  Median: 91.7% (IQR: 63.8% - 100.0%)
+
+> cat(sprintf("  Range: %.1f%% - %.1f%%\n\n",
++             min(participant_adherence$ndvi_adherence),
++             max(participant_adherence$ndvi_ad .... [TRUNCATED] 
+  Range: 6.7% - 100.0%
+
+
+> # Adherence by group
+> adherence_by_group <- participant_adherence %>%
++   group_by(Group) %>%
++   summarise(
++     n = n(),
++     stress_mean = mea .... [TRUNCATED] 
+
+> cat("ADHERENCE BY GROUP:\n")
+ADHERENCE BY GROUP:
+
+> cat("-------------------\n")
+-------------------
+
+> print(adherence_by_group)
+# A tibble: 2 × 6
+  Group     n stress_mean stress_sd ndvi_mean ndvi_sd
+  <chr> <int>       <dbl>     <dbl>     <dbl>   <dbl>
+1 CHR     156        42.6      27.7      78.1    27.1
+2 HC       22        48.3      27.2      77.3    29.6
+
+> cat("\n")
+
+
+> # Identify dropout (participants who stopped providing data)
+> dropout_analysis <- complete_data %>%
++   group_by(Participant_ID) %>%
++   arrange(st .... [TRUNCATED] 
+
+> cat("DROPOUT ANALYSIS:\n")
+DROPOUT ANALYSIS:
+
+> cat("-----------------\n")
+-----------------
+
+> cat(sprintf("Participants with data through day 60: %d (%.1f%%)\n",
++             sum(dropout_analysis$completed_60_days),
++             mean(dropou .... [TRUNCATED] 
+Participants with data through day 60: 108 (60.7%)
+
+> cat(sprintf("Participants who stopped early (dropout): %d (%.1f%%)\n",
++             sum(!dropout_analysis$completed_60_days),
++             mean(!d .... [TRUNCATED] 
+Participants who stopped early (dropout): 70 (39.3%)
+
+> cat(sprintf("Mean last day of data: %.1f (SD = %.1f)\n\n",
++             mean(dropout_analysis$last_data_day),
++             sd(dropout_analysis$las .... [TRUNCATED] 
+Mean last day of data: 54.5 (SD = 11.8)
+
+
+> # Save adherence tables
+> write_csv(participant_adherence,
++           file.path(output_dir, "participant_adherence.csv"))
+
+> write_csv(pattern_summary,
++           file.path(output_dir, "observation_patterns.csv"))
+
+> write_csv(dropout_analysis,
++           file.path(output_dir, "dropout_analysis.csv"))
+
+> # ============================================================================
+> # 3. VISUALIZATIONS
+> # =========================================== .... [TRUNCATED] 
+================================================================================ 
+
+> cat("CREATING VISUALIZATIONS\n")
+CREATING VISUALIZATIONS
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n\n")
+================================================================================ 
+
+
+> # Plot 1: Observation patterns
+> pattern_data <- data.frame(
++   Pattern = c("Both Present", "Only Stress", "Only NDVI", "Both Missing"),
++   Count  .... [TRUNCATED] 
+
+> p1 <- ggplot(pattern_data, aes(x = Pattern, y = Percentage, fill = Pattern)) +
++   geom_bar(stat = "identity", alpha = 0.8) +
++   geom_text(aes(labe .... [TRUNCATED] 
+
+> ggsave(file.path(output_dir, "observation_patterns.png"), p1,
++        width = 10, height = 6)
+
+> # Plot 2: Adherence over time
+> adherence_by_day <- complete_data %>%
++   group_by(study_day) %>%
++   summarise(
++     stress_adherence = mean(!stre .... [TRUNCATED] 
+
+> p2 <- ggplot(adherence_by_day, aes(x = study_day, y = Adherence,
++                                     color = Measure, linetype = Measure)) +
++   g .... [TRUNCATED] 
+
+> ggsave(file.path(output_dir, "adherence_over_time.png"), p2,
++        width = 10, height = 6)
+
+> cat("Visualizations saved.\n\n")
+Visualizations saved.
+
+
+> # ============================================================================
+> # 4. MISSINGNESS PREDICTORS WITH RACE
+> # ========================= .... [TRUNCATED] 
+================================================================================ 
+
+> cat("MISSINGNESS PREDICTORS ANALYSIS\n")
+MISSINGNESS PREDICTORS ANALYSIS
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n\n")
+================================================================================ 
+
+
+> # Prepare lagged variables
+> complete_data <- complete_data %>%
++   group_by(Participant_ID) %>%
++   arrange(Date) %>%
++   mutate(
++     stress_lag1 .... [TRUNCATED] 
+
+> # Get participant baseline data
+> participant_baseline <- data %>%
++   group_by(Participant_ID) %>%
++   summarise(
++     Group = first(na.omit(Group .... [TRUNCATED] 
+
+> # Join and prepare model data
+> model_data <- complete_data %>%
++   left_join(participant_baseline, by = "Participant_ID") %>%
++   mutate(
++     Gro .... [TRUNCATED] 
+
+> # MODEL 1A: Baseline predictors of STRESS missingness
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n")
+================================================================================ 
+
+> cat("MODEL 1A: BASELINE PREDICTORS OF STRESS MISSINGNESS\n")
+MODEL 1A: BASELINE PREDICTORS OF STRESS MISSINGNESS
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n\n")
+================================================================================ 
+
+
+> model1a <- glmer(
++   stress_missing ~
++     Group + age + sex + race_white +
++     clgry_total_baseline +
++     bprs_total_baseline +
++     oasis_t .... [TRUNCATED] 
+
+> model1a_summary <- tidy(model1a, effects = "fixed", conf.int = TRUE,
++                        exponentiate = TRUE)
+
+> cat("Odds Ratios for Stress Missingness:\n\n")
+Odds Ratios for Stress Missingness:
+
+
+> print(model1a_summary %>% select(term, estimate, conf.low, conf.high, p.value), n = Inf)
+# A tibble: 8 × 5
+  term                 estimate conf.low conf.high p.value
+  <chr>                   <dbl>    <dbl>     <dbl>   <dbl>
+1 (Intercept)             7.41     1.25     44.0   0.0275 
+2 GroupHC                 0.718    0.329     1.57  0.406  
+3 age                     0.942    0.891     0.996 0.0360 
+4 sexM                    1.52     0.960     2.41  0.0740 
+5 race_whiteNon-White     1.80     1.16      2.81  0.00939
+6 clgry_total_baseline    1.12     1.04      1.20  0.00263
+7 bprs_total_baseline     0.962    0.927     0.998 0.0375 
+8 oasis_total_baseline    1.03     0.963     1.10  0.406  
+
+> cat("\n")
+
+
+> write_csv(model1a_summary,
++           file.path(output_dir, "model1a_stress_baseline.csv"))
+
+> # MODEL 1B: Time-varying predictors of STRESS missingness
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n")
+================================================================================ 
+
+> cat("MODEL 1B: TIME-VARYING PREDICTORS OF STRESS MISSINGNESS\n")
+MODEL 1B: TIME-VARYING PREDICTORS OF STRESS MISSINGNESS
+
+> cat("INCLUDING PREVIOUS NDVI (KEY TEST)\n")
+INCLUDING PREVIOUS NDVI (KEY TEST)
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n\n")
+================================================================================ 
+
+
+> model_data_complete <- model_data %>%
++   filter(!is.na(stress_lag1), !is.na(ndvi_lag1))
+
+> cat(sprintf("Sample size: %d observations from %d participants\n\n",
++             nrow(model_data_complete),
++             n_distinct(model_data_co .... [TRUNCATED] 
+Sample size: 4565 observations from 178 participants
+
+
+> model1b <- glmer(
++   stress_missing ~
++     Group + age + sex + race_white +
++     clgry_total_baseline +
++     bprs_total_baseline +
++     oasis_t .... [TRUNCATED] 
+
+> model1b_summary <- tidy(model1b, effects = "fixed", conf.int = TRUE,
++                        exponentiate = TRUE)
+
+> cat("Odds Ratios for Stress Missingness:\n\n")
+Odds Ratios for Stress Missingness:
+
+
+> print(model1b_summary %>% select(term, estimate, conf.low, conf.high, p.value), n = Inf)
+# A tibble: 11 × 5
+   term                 estimate conf.low conf.high  p.value
+   <chr>                   <dbl>    <dbl>     <dbl>    <dbl>
+ 1 (Intercept)             1.50     0.319     7.06  6.08e- 1
+ 2 GroupHC                 1.06     0.564     2.01  8.47e- 1
+ 3 age                     0.938    0.895     0.982 6.77e- 3
+ 4 sexM                    1.32     0.907     1.91  1.48e- 1
+ 5 race_whiteNon-White     1.47     1.02      2.13  4.13e- 2
+ 6 clgry_total_baseline    1.11     1.04      1.18  1.02e- 3
+ 7 bprs_total_baseline     0.980    0.951     1.01  1.95e- 1
+ 8 oasis_total_baseline    1.01     0.953     1.06  8.49e- 1
+ 9 study_day               1.02     1.01      1.02  7.04e-13
+10 stress_lag1             1.03     0.975     1.08  3.26e- 1
+11 ndvi_lag1               0.802    0.378     1.70  5.65e- 1
+
+> cat("\n")
+
+
+> write_csv(model1b_summary,
++           file.path(output_dir, "model1b_stress_timevarying.csv"))
+
+> # KEY FINDINGS
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n")
+================================================================================ 
+
+> cat("*** KEY FINDINGS FOR REVIEWER ***\n")
+*** KEY FINDINGS FOR REVIEWER ***
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n\n")
+================================================================================ 
+
+
+> ndvi_result <- model1b_summary %>% filter(term == "ndvi_lag1")
+
+> stress_result <- model1b_summary %>% filter(term == "stress_lag1")
+
+> if (nrow(ndvi_result) > 0) {
++   cat("1. DOES GREENSPACE (NDVI) PREDICT STRESS MISSINGNESS?\n\n")
++   if (ndvi_result$p.value < 0.05) {
++     cat(sp .... [TRUNCATED] 
+1. DOES GREENSPACE (NDVI) PREDICT STRESS MISSINGNESS?
+
+   NO: OR = 0.802 (95% CI: 0.378-1.700), p = 0.5648
+   INTERPRETATION: Greenspace NOT related to missingness.
+
+
+> if (nrow(stress_result) > 0) {
++   cat("2. DOES PREVIOUS STRESS PREDICT STRESS MISSINGNESS?\n\n")
++   if (stress_result$p.value < 0.05) {
++     cat( .... [TRUNCATED] 
+2. DOES PREVIOUS STRESS PREDICT STRESS MISSINGNESS?
+
+   NO: OR = 1.025 (95% CI: 0.975-1.078), p = 0.3263
+   INTERPRETATION: Less concern about MNAR.
+
+
+> # MODEL 2A: Baseline predictors of NDVI missingness
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n")
+================================================================================ 
+
+> cat("MODEL 2A: BASELINE PREDICTORS OF NDVI MISSINGNESS\n")
+MODEL 2A: BASELINE PREDICTORS OF NDVI MISSINGNESS
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n\n")
+================================================================================ 
+
+
+> model2a <- glmer(
++   ndvi_missing ~
++     Group + age + sex + race_white +
++     clgry_total_baseline +
++     bprs_total_baseline +
++     oasis_tot .... [TRUNCATED] 
+
+> model2a_summary <- tidy(model2a, effects = "fixed", conf.int = TRUE,
++                        exponentiate = TRUE)
+
+> cat("Odds Ratios for NDVI Missingness:\n\n")
+Odds Ratios for NDVI Missingness:
+
+
+> print(model2a_summary %>% select(term, estimate, conf.low, conf.high, p.value), n = Inf)
+# A tibble: 8 × 5
+  term                 estimate conf.low conf.high p.value
+  <chr>                   <dbl>    <dbl>     <dbl>   <dbl>
+1 (Intercept)             0.103  0.00400      2.63   0.169
+2 GroupHC                 0.820  0.196        3.43   0.786
+3 age                     0.981  0.886        1.09   0.707
+4 sexM                    1.05   0.453        2.43   0.910
+5 race_whiteNon-White     1.45   0.644        3.25   0.370
+6 clgry_total_baseline    1.02   0.888        1.16   0.823
+7 bprs_total_baseline     0.998  0.933        1.07   0.953
+8 oasis_total_baseline    1.00   0.889        1.13   0.993
+
+> cat("\n")
+
+
+> write_csv(model2a_summary,
++           file.path(output_dir, "model2a_ndvi_baseline.csv"))
+
+> # MODEL 2B: Time-varying predictors of NDVI missingness
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n")
+================================================================================ 
+
+> cat("MODEL 2B: TIME-VARYING PREDICTORS OF NDVI MISSINGNESS\n")
+MODEL 2B: TIME-VARYING PREDICTORS OF NDVI MISSINGNESS
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n\n")
+================================================================================ 
+
+
+> model2b <- glmer(
++   ndvi_missing ~
++     Group + age + sex + race_white +
++     clgry_total_baseline +
++     bprs_total_baseline +
++     oasis_tot .... [TRUNCATED] 
+
+> model2b_summary <- tidy(model2b, effects = "fixed", conf.int = TRUE,
++                        exponentiate = TRUE)
+
+> cat("Odds Ratios for NDVI Missingness:\n\n")
+Odds Ratios for NDVI Missingness:
+
+
+> print(model2b_summary %>% select(term, estimate, conf.low, conf.high, p.value), n = Inf)
+# A tibble: 11 × 5
+   term                 estimate conf.low conf.high p.value
+   <chr>                   <dbl>    <dbl>     <dbl>   <dbl>
+ 1 (Intercept)             0.134  0.00650      2.74   0.192
+ 2 GroupHC                 1.02   0.289        3.59   0.978
+ 3 age                     0.946  0.862        1.04   0.240
+ 4 sexM                    1.03   0.489        2.17   0.935
+ 5 race_whiteNon-White     1.65   0.790        3.43   0.183
+ 6 clgry_total_baseline    1.05   0.930        1.19   0.423
+ 7 bprs_total_baseline     0.975  0.917        1.04   0.417
+ 8 oasis_total_baseline    1.02   0.919        1.13   0.721
+ 9 study_day               1.01   0.997        1.01   0.205
+10 stress_lag1             1.04   0.939        1.15   0.465
+11 ndvi_lag1               0.525  0.111        2.48   0.416
+
+> cat("\n")
+
+
+> write_csv(model2b_summary,
++           file.path(output_dir, "model2b_ndvi_timevarying.csv"))
+
+> # ============================================================================
+> # 5. CREATE SUMMARY TABLE
+> # ===================================== .... [TRUNCATED] 
+================================================================================ 
+
+> cat("CREATING SUMMARY TABLE\n")
+CREATING SUMMARY TABLE
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n\n")
+================================================================================ 
+
+
+> # Function to format results
+> format_result <- function(summary_df, term_name) {
++   result <- summary_df %>% filter(term == term_name)
++   if (nro .... [TRUNCATED] 
+
+> # Create comprehensive summary table
+> summary_table <- data.frame(
++   Predictor = c(
++     "Baseline Demographics:",
++     "  Group (HC vs CHR)",
+ .... [TRUNCATED] 
+
+> write_csv(summary_table,
++           file.path(output_dir, "missingness_predictors_summary.csv"))
+
+> cat("Summary table saved.\n\n")
+Summary table saved.
+
+
+> # ============================================================================
+> # 6. FINAL SUMMARY
+> # ============================================ .... [TRUNCATED] 
+================================================================================ 
+
+> cat("ANALYSIS COMPLETE\n")
+ANALYSIS COMPLETE
+
+> cat("=" %>% rep(80) %>% paste(collapse = ""), "\n\n")
+================================================================================ 
+
+
+> cat("Files generated:\n")
+Files generated:
+
+> cat("  - participant_adherence.csv\n")
+  - participant_adherence.csv
+
+> cat("  - observation_patterns.csv\n")
+  - observation_patterns.csv
+
+> cat("  - dropout_analysis.csv\n")
+  - dropout_analysis.csv
+
+> cat("  - model1a_stress_baseline.csv\n")
+  - model1a_stress_baseline.csv
+
+> cat("  - model1b_stress_timevarying.csv\n")
+  - model1b_stress_timevarying.csv
+
+> cat("  - model2a_ndvi_baseline.csv\n")
+  - model2a_ndvi_baseline.csv
+
+> cat("  - model2b_ndvi_timevarying.csv\n")
+  - model2b_ndvi_timevarying.csv
+
+> cat("  - missingness_predictors_summary.csv\n")
+  - missingness_predictors_summary.csv
+
+> cat("  - observation_patterns.png\n")
+  - observation_patterns.png
+
+> cat("  - adherence_over_time.png\n\n")
+  - adherence_over_time.png
+
+
+> cat("This analysis uses the TRUE 60-day enrollment period for all participants,\n")
+This analysis uses the TRUE 60-day enrollment period for all participants,
+
+> cat("providing accurate adherence rates and missingness patterns including dropout.\n\n")
+providing accurate adherence rates and missingness patterns including dropout.
+
+
+> sink()

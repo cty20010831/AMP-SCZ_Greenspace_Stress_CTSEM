@@ -1,0 +1,16 @@
+.Rhistory
+.Rproj.user
+
+analysis_CHR.Rmd
+
+ndvi_stress_data.csv
+clinical_monthly.csv
+start_dates.csv
+
+output/*.rds
+
+revision_analysis/ema_psychometric_literature
+
+similar_empirical_papers/
+
+ctsem_complex_tutorial.html

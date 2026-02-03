@@ -1,0 +1,184 @@
+---
+title: "analysis"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+library(ctsem)
+library(dplyr)
+```
+
+```{r}
+# Load helper functions
+source("helper_funcs.R")
+```
+
+
+```{r}
+output_dir_path <- "output/"
+
+# Check if the directory exists
+if (!dir.exists(output_dir_path)) {
+  # If it doesn't exist, create it
+  dir.create(output_dir_path)
+  print(paste("Directory '", output_dir_path, "' created.", sep = ""))
+} else {
+  print(paste("Directory '", output_dir_path, "' already exists.", sep = ""))
+}
+```
+
+
+# CHR VS. CC
+
+## Data preparation
+```{r}
+# Load the data
+raw_data <- read.csv("ndvi_stress_data.csv")
+```
+
+```{r}
+# Data preparation
+prepared_data <- data_prep(raw_data)
+```
+
+
+## Model Fitting
+
+```{r}
+# Whether to include Time-Dependent Predictors
+include_TD <- TRUE
+
+# Set file path based on whether TD predictors are included
+if (include_TD) {
+  ctsem_fit_path <- "output/fit_group_interaction_mcmc_with_TD.rds"
+  # ctsem_fit_path <- "output/fit_group_interaction_MAP_with_TD.rds"
+  td_predictors <- c("day", "hometime", "entropy", "locations")
+} else {
+  ctsem_fit_path <- "output/fit_group_interaction_mcmc.rds"
+  # ctsem_fit_path <- "output/fit_group_interaction_MAP.rds"
+  td_predictors <- NULL
+}
+
+if (file.exists(ctsem_fit_path)){
+  cat("Loading existing fit from:", ctsem_fit_path, "\n")
+  fit_interaction <- readRDS(ctsem_fit_path)
+} else {
+  # Specify the model
+  ctsem_model_1 <- model_spec(interaction = "partial", TDpred = td_predictors)
+
+  # fit_interaction <- ctStanFit(
+  #   datalong = prepared_data,
+  #   ctstanmodel = ctsem_model_1,
+  #   cores = 4,
+  #   optimize = TRUE, # MAP
+  #   priors = TRUE,
+  #   # Set the seed for reproducibility
+  #   seed = 12
+  # )
+
+  fit_interaction <- ctStanFit(
+    datalong = prepared_data,
+    ctstanmodel = ctsem_model_1,
+    cores = 4,
+    optimize = FALSE,    # Use MCMC sampling instead of MAP
+    iter = 2000,         # Total iterations per chain
+    warmup = 1000,       # Burn-in iterations
+    chains = 4,          # Number of MCMC chains
+    priors = TRUE,
+    control = list(adapt_delta = 0.95, max_treedepth = 12),
+    seed = 12
+  )
+
+  # Save the fit object
+  saveRDS(fit_interaction, file = ctsem_fit_path)
+  cat("Model fitted and saved to:", ctsem_fit_path, "\n")
+}
+```
+
+## Results and Interpretation
+```{r}
+# Parameter estimates, standard deviations (SD) and posterior credibility 
+# intervals (CI) for means of estimated NDVI population distributions.
+NDVI_table_1 <- create_ctsem_table_1(fit_interaction, variable = "NDVI")
+print("Parameter estimates, standard deviations (SD) and posterior 
+      credibility intervals (CI) for means of estimated NDVI population distributions.")
+print(NDVI_table_1)
+```
+
+```{r}
+# Parameter estimates, standard deviations (SD) and posterior credibility 
+# intervals (CI) for means of estimated Stress population distributions.
+Stress_table_1 <- create_ctsem_table_1(fit_interaction, variable = "Stress")
+print("Parameter estimates, standard deviations (SD) and posterior 
+      credibility intervals (CI) for means of estimated Stress population distributions.")
+print(Stress_table_1)
+```
+
+
+```{r}
+# Autoregressive and cross-lagged effects between NDVI and stress
+table_2 <- create_ctsem_table_2(fit_interaction)
+print(table_2)
+```
+
+```{r}
+# Plot discrete-time autoregressive and cross-lagged effects of NDVI and stress
+plot_discrete_effects(fit_interaction, indices = "all")
+```
+
+
+```{r}
+# Plot discrete-time cross-lagged effects of NDVI and stress
+plot_discrete_effects(fit_interaction, indices = "CR")
+```
+
+```{r}
+# Calculate long-term, asymptotic correlation between the two processes in their random fluctuations
+asymptotic_correlation(fit_interaction)
+```
+
+```{r}
+# Time-dependent predictor effects
+extract_td_effects(fit_interaction, td_predictors)
+```
+
+```{r}
+# TI predictor effects of cross-lagged effects
+cl_effect_moderate(fit_interaction, moderator = c("group", "sex", "age", "race", "education")) # continuous-time effect
+
+```
+
+
+## Examine group difference of cross-lagged effects
+```{r}
+# The interpretation should be something like A ➔ B relationship 
+# was stronger in Group X than in Group Y (Est. = [], SD = [], 95 % CI [; ]).
+cl_effect_moderate(fit_interaction) # continuous-time effect
+
+# This is CHR against CC group 
+```
+
+
+```{r}
+# Generate the Median and 95% CI of cross-lagged effects of two groups (CC and CHR) using ctStanTIpredeffects
+analyze_group_effects(fit_interaction, method = 'ctStanTIpredeffects') # continuous-time effect
+```
+
+
+```{r}
+# Generate the Median and 95% CI of cross-lagged effects of two groups (CC and CHR) using ctExtract to extract the whole posterior samples
+analyze_group_effects(fit_interaction, method = 'ctExtract') # continuous-time effect
+```
+
+```{r}
+# Plot discrete-time autoregressive and cross-lagged effects of NDVI and stress for each group
+plot_discrete_effects_group(fit_interaction)
+```
+
+```{r}
+# Plot discrete-time cross-lagged effects of NDVI and stress for each group
+plot_discrete_effects_group(fit_interaction, indices = "CR")
+```
+

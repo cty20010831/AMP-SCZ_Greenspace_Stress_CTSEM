@@ -1,0 +1,15 @@
+Predictor,Stress_Missingness_Baseline,Stress_Missingness_TimeVarying,NDVI_Missingness_Baseline,NDVI_Missingness_TimeVarying
+Baseline Demographics:,,,,
+  Group (HC vs CHR),"OR=0.72 [0.33,1.57], p=0.406","OR=1.06 [0.56,2.01], p=0.847","OR=0.82 [0.20,3.43], p=0.786","OR=1.02 [0.29,3.59], p=0.978"
+  Age,"OR=0.94 [0.89,1.00], p=0.036*","OR=0.94 [0.89,0.98], p=0.007**","OR=0.98 [0.89,1.09], p=0.707","OR=0.95 [0.86,1.04], p=0.240"
+  Sex (Male vs Female),"OR=1.52 [0.96,2.41], p=0.074†","OR=1.32 [0.91,1.91], p=0.148","OR=1.05 [0.45,2.43], p=0.910","OR=1.03 [0.49,2.17], p=0.935"
+  Race (Non-White vs White),"OR=1.80 [1.16,2.81], p=0.009**","OR=1.47 [1.02,2.13], p=0.041*","OR=1.45 [0.64,3.25], p=0.370","OR=1.65 [0.79,3.43], p=0.183"
+Baseline Clinical:,,,,
+  Calgary Depression,"OR=1.12 [1.04,1.20], p=0.003**",--,"OR=1.02 [0.89,1.16], p=0.823",--
+  BPRS (Psychosis),"OR=0.96 [0.93,1.00], p=0.038*",--,"OR=1.00 [0.93,1.07], p=0.953",--
+  OASIS (Anxiety),"OR=1.03 [0.96,1.10], p=0.406",--,"OR=1.00 [0.89,1.13], p=0.993",--
+Time-Varying:,,,,
+  Study Day,--,"OR=1.02 [1.01,1.02], p=<.001***",--,"OR=1.01 [1.00,1.01], p=0.205"
+  Previous Stress,--,"OR=1.03 [0.98,1.08], p=0.326",--,"OR=1.04 [0.94,1.15], p=0.465"
+  Previous NDVI (Greenspace),--,"OR=0.80 [0.38,1.70], p=0.565",--,"OR=0.52 [0.11,2.48], p=0.416"
+  Previous Missingness,--,--,--,--
